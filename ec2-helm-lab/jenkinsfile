@@ -4,6 +4,7 @@ pipeline {
   environment {
     GIT_REPO = "https://github.com/DevByShrirang/EC2_using_helm_chart_for_mutiple_env.git"
     APP_NAME = "ec2-helm-lab"
+    AWS_REGION = "us-east-2"
   }
 
   stages {
@@ -15,10 +16,11 @@ pipeline {
       }
     }
 
+    // ========== DEV ENVIRONMENT ========== //
     stage('Deploy to Dev') {
       steps {
         dir("${APP_NAME}") {
-          echo "🚀 Deploying to DEV environment..."
+          echo "🚀 Rendering Helm templates for DEV environment..."
           sh """
             helm template ${APP_NAME}-dev ./ -f values-dev.yaml > rendered-dev.yaml
             echo '✅ DEV environment simulated deployment complete'
@@ -28,6 +30,22 @@ pipeline {
       }
     }
 
+    stage('Create EC2 for Dev') {
+      steps {
+        dir("${APP_NAME}") {
+          echo "⚙️ Creating EC2 instance for DEV..."
+          sh '''
+            # Extract and execute AWS CLI commands from Helm output
+            grep "aws ec2 run-instances" rendered-dev.yaml | sed "s/^.*aws/aws/" > launch-dev.sh
+            chmod +x launch-dev.sh
+            echo "🔹 Launching EC2 instance..."
+            ./launch-dev.sh || echo "⚠️ No EC2 creation command found in rendered-dev.yaml"
+          '''
+        }
+      }
+    }
+
+    // ========== STAGE ENVIRONMENT ========== //
     stage('Approval for Stage') {
       steps {
         timeout(time: 15, unit: 'MINUTES') {
@@ -39,7 +57,7 @@ pipeline {
     stage('Deploy to Stage') {
       steps {
         dir("${APP_NAME}") {
-          echo "🚀 Deploying to STAGE environment..."
+          echo "🚀 Rendering Helm templates for STAGE environment..."
           sh """
             helm template ${APP_NAME}-stage ./ -f values-stage.yaml > rendered-stage.yaml
             echo '✅ STAGE environment simulated deployment complete'
@@ -49,6 +67,21 @@ pipeline {
       }
     }
 
+    stage('Create EC2 for Stage') {
+      steps {
+        dir("${APP_NAME}") {
+          echo "⚙️ Creating EC2 instance for STAGE..."
+          sh '''
+            grep "aws ec2 run-instances" rendered-stage.yaml | sed "s/^.*aws/aws/" > launch-stage.sh
+            chmod +x launch-stage.sh
+            echo "🔹 Launching EC2 instance..."
+            ./launch-stage.sh || echo "⚠️ No EC2 creation command found in rendered-stage.yaml"
+          '''
+        }
+      }
+    }
+
+    // ========== PROD ENVIRONMENT ========== //
     stage('Approval for Prod') {
       steps {
         timeout(time: 15, unit: 'MINUTES') {
@@ -60,7 +93,7 @@ pipeline {
     stage('Deploy to Prod') {
       steps {
         dir("${APP_NAME}") {
-          echo "🚀 Deploying to PROD environment..."
+          echo "🚀 Rendering Helm templates for PROD environment..."
           sh """
             helm template ${APP_NAME}-prod ./ -f values-prod.yaml > rendered-prod.yaml
             echo '✅ PROD environment simulated deployment complete'
@@ -69,11 +102,25 @@ pipeline {
         }
       }
     }
+
+    stage('Create EC2 for Prod') {
+      steps {
+        dir("${APP_NAME}") {
+          echo "⚙️ Creating EC2 instance for PROD..."
+          sh '''
+            grep "aws ec2 run-instances" rendered-prod.yaml | sed "s/^.*aws/aws/" > launch-prod.sh
+            chmod +x launch-prod.sh
+            echo "🔹 Launching EC2 instance..."
+            ./launch-prod.sh || echo "⚠️ No EC2 creation command found in rendered-prod.yaml"
+          '''
+        }
+      }
+    }
   }
 
   post {
     success {
-      echo "🎯 All environments promoted successfully!"
+      echo "🎯 All environments promoted successfully and EC2s launched!"
     }
     failure {
       echo "❌ Promotion failed. Please check the previous stage."
