@@ -1,0 +1,76 @@
+pipeline {
+  agent any
+
+  environment {
+    GIT_REPO = "https://github.com/DevByShrirang/EC2_using_helm_chart_for_mutiple_env.git"
+    APP_NAME = "ec2-helm-lab"
+  }
+
+  stages {
+
+    stage('Checkout Repository') {
+      steps {
+        echo "🔹 Cloning Helm chart repository..."
+        git branch: 'main', url: "${GIT_REPO}"
+      }
+    }
+
+    stage('Deploy to Dev') {
+      steps {
+        echo "🚀 Deploying to DEV environment..."
+        sh """
+          helm template ${APP_NAME}-dev ./ -f values-dev.yaml > rendered-dev.yaml
+          echo '✅ DEV environment simulated deployment complete'
+          cat rendered-dev.yaml
+        """
+      }
+    }
+
+    stage('Approval for Stage') {
+      steps {
+        timeout(time: 15, unit: 'MINUTES') {
+          input message: "🟡 Approve promotion from DEV → STAGE?"
+        }
+      }
+    }
+
+    stage('Deploy to Stage') {
+      steps {
+        echo "🚀 Deploying to STAGE environment..."
+        sh """
+          helm template ${APP_NAME}-stage ./ -f values-stage.yaml > rendered-stage.yaml
+          echo '✅ STAGE environment simulated deployment complete'
+          cat rendered-stage.yaml
+        """
+      }
+    }
+
+    stage('Approval for Prod') {
+      steps {
+        timeout(time: 15, unit: 'MINUTES') {
+          input message: "🔴 Approve promotion from STAGE → PROD?"
+        }
+      }
+    }
+
+    stage('Deploy to Prod') {
+      steps {
+        echo "🚀 Deploying to PROD environment..."
+        sh """
+          helm template ${APP_NAME}-prod ./ -f values-prod.yaml > rendered-prod.yaml
+          echo '✅ PROD environment simulated deployment complete'
+          cat rendered-prod.yaml
+        """
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "🎯 All environments promoted successfully!"
+    }
+    failure {
+      echo "❌ Promotion failed. Please check the previous stage."
+    }
+  }
+}
