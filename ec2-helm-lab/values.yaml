@@ -5,3 +5,6 @@ aws:
   instanceType: t3.micro
   securityGroupName: terraform-20251020023708191800000002
   tagBaseName: ec2-lab
+
+service:
+  port: 80
