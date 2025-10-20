@@ -9,6 +9,7 @@ pipeline {
 
   stages {
 
+    // ------------------------- CHECKOUT ------------------------- //
     stage('Checkout Repository') {
       steps {
         echo "🔹 Cloning Helm chart repository..."
@@ -16,7 +17,7 @@ pipeline {
       }
     }
 
-    // ========== DEV ENVIRONMENT ========== //
+    // ------------------------- DEV ------------------------- //
     stage('Deploy to Dev') {
       steps {
         dir("${APP_NAME}") {
@@ -35,17 +36,23 @@ pipeline {
         dir("${APP_NAME}") {
           echo "⚙️ Creating EC2 instance for DEV..."
           sh '''
-            # Extract and execute AWS CLI commands from Helm output
+            # Extract EC2 command from Helm-rendered YAML
             grep "aws ec2 run-instances" rendered-dev.yaml | sed "s/^.*aws/aws/" > launch-dev.sh
             chmod +x launch-dev.sh
-            echo "🔹 Launching EC2 instance..."
-            ./launch-dev.sh || echo "⚠️ No EC2 creation command found in rendered-dev.yaml"
+
+            # Check if script has content before executing
+            if [ ! -s launch-dev.sh ]; then
+              echo "⚠️ No EC2 creation command found in rendered-dev.yaml — skipping EC2 creation."
+            else
+              echo "🔹 Launching EC2 instance..."
+              ./launch-dev.sh || echo "⚠️ EC2 creation failed — please check AWS credentials or parameters."
+            fi
           '''
         }
       }
     }
 
-    // ========== STAGE ENVIRONMENT ========== //
+    // ------------------------- STAGE ------------------------- //
     stage('Approval for Stage') {
       steps {
         timeout(time: 15, unit: 'MINUTES') {
@@ -74,14 +81,19 @@ pipeline {
           sh '''
             grep "aws ec2 run-instances" rendered-stage.yaml | sed "s/^.*aws/aws/" > launch-stage.sh
             chmod +x launch-stage.sh
-            echo "🔹 Launching EC2 instance..."
-            ./launch-stage.sh || echo "⚠️ No EC2 creation command found in rendered-stage.yaml"
+
+            if [ ! -s launch-stage.sh ]; then
+              echo "⚠️ No EC2 creation command found in rendered-stage.yaml — skipping EC2 creation."
+            else
+              echo "🔹 Launching EC2 instance..."
+              ./launch-stage.sh || echo "⚠️ EC2 creation failed — please check AWS credentials or parameters."
+            fi
           '''
         }
       }
     }
 
-    // ========== PROD ENVIRONMENT ========== //
+    // ------------------------- PROD ------------------------- //
     stage('Approval for Prod') {
       steps {
         timeout(time: 15, unit: 'MINUTES') {
@@ -110,20 +122,23 @@ pipeline {
           sh '''
             grep "aws ec2 run-instances" rendered-prod.yaml | sed "s/^.*aws/aws/" > launch-prod.sh
             chmod +x launch-prod.sh
-            echo "🔹 Launching EC2 instance..."
-            ./launch-prod.sh || echo "⚠️ No EC2 creation command found in rendered-prod.yaml"
+
+            if [ ! -s launch-prod.sh ]; then
+              echo "⚠️ No EC2 creation command found in rendered-prod.yaml — skipping EC2 creation."
+            else
+              echo "🔹 Launching EC2 instance..."
+              ./launch-prod.sh || echo "⚠️ EC2 creation failed — please check AWS credentials or parameters."
+            fi
           '''
         }
       }
     }
   }
 
+  // ------------------------- POST ACTIONS ------------------------- //
   post {
     success {
-      echo "🎯 All environments promoted successfully and EC2s launched!"
+      echo "🎯 All environments promoted successfully and EC2s created where applicable!"
     }
     failure {
-      echo "❌ Promotion failed. Please check the previous stage."
-    }
-  }
-}
+      echo "❌ Promotion failed. Please check the previous stage logs for detail
