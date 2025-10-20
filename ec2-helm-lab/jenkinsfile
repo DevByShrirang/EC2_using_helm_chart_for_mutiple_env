@@ -17,12 +17,14 @@ pipeline {
 
     stage('Deploy to Dev') {
       steps {
-        echo "🚀 Deploying to DEV environment..."
-        sh """
-          helm template ${APP_NAME}-dev ./ -f values-dev.yaml > rendered-dev.yaml
-          echo '✅ DEV environment simulated deployment complete'
-          cat rendered-dev.yaml
-        """
+        dir("${APP_NAME}") {
+          echo "🚀 Deploying to DEV environment..."
+          sh """
+            helm template ${APP_NAME}-dev ./ -f values-dev.yaml > rendered-dev.yaml
+            echo '✅ DEV environment simulated deployment complete'
+            cat rendered-dev.yaml
+          """
+        }
       }
     }
 
@@ -36,12 +38,14 @@ pipeline {
 
     stage('Deploy to Stage') {
       steps {
-        echo "🚀 Deploying to STAGE environment..."
-        sh """
-          helm template ${APP_NAME}-stage ./ -f values-stage.yaml > rendered-stage.yaml
-          echo '✅ STAGE environment simulated deployment complete'
-          cat rendered-stage.yaml
-        """
+        dir("${APP_NAME}") {
+          echo "🚀 Deploying to STAGE environment..."
+          sh """
+            helm template ${APP_NAME}-stage ./ -f values-stage.yaml > rendered-stage.yaml
+            echo '✅ STAGE environment simulated deployment complete'
+            cat rendered-stage.yaml
+          """
+        }
       }
     }
 
@@ -55,12 +59,14 @@ pipeline {
 
     stage('Deploy to Prod') {
       steps {
-        echo "🚀 Deploying to PROD environment..."
-        sh """
-          helm template ${APP_NAME}-prod ./ -f values-prod.yaml > rendered-prod.yaml
-          echo '✅ PROD environment simulated deployment complete'
-          cat rendered-prod.yaml
-        """
+        dir("${APP_NAME}") {
+          echo "🚀 Deploying to PROD environment..."
+          sh """
+            helm template ${APP_NAME}-prod ./ -f values-prod.yaml > rendered-prod.yaml
+            echo '✅ PROD environment simulated deployment complete'
+            cat rendered-prod.yaml
+          """
+        }
       }
     }
   }
