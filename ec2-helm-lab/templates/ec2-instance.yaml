@@ -1,18 +1,15 @@
-{{- range $i, $e := until (.Values.aws.instanceCount | int) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ec2-instance-{{ $.Values.environment }}-{{ $i }}
+  name: ec2-instance-dev
 data:
   create-ec2.sh: |
     #!/bin/bash
-    echo "🚀 Launching EC2 instance for {{ $.Values.environment }} environment - instance #{{ $i }}"
+    echo "🚀 Launching EC2 instance for dev environment"
     aws ec2 run-instances \
-      --region {{ $.Values.aws.region }} \
-      --image-id {{ $.Values.aws.amiId }} \
-      --instance-type {{ $.Values.aws.instanceType }} \
-      --key-name {{ $.Values.aws.keyName }} \
-      --security-groups {{ $.Values.aws.securityGroupName }} \
-      --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value={{ $.Values.aws.tagBaseName }}-{{ $i }}},{Key=Environment,Value={{ $.Values.environment }}}]"
----
-{{- end }}
+      --region us-east-2 \
+      --image-id ami-077b630ef539aa0b5 \
+      --instance-type t3.micro \
+      --key-name jenkins \
+      --security-groups terraform-20251020023708191800000002 \
+      --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=ec2-lab-dev},{Key=Environment,Value=dev}]"
