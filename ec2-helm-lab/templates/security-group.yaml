@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-group-{{ .Values.environment }}
+data:
+  create-sg.sh: |
+    #!/bin/bash
+    echo "🔒 Creating Security Group for {{ .Values.environment }}"
+    aws ec2 create-security-group \
+      --group-name {{ .Values.aws.securityGroupName }}-{{ .Values.environment }} \
+      --description "Security Group for {{ .Values.environment }} environment"

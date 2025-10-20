@@ -1,0 +1,4 @@
+environment: dev
+aws:
+  instanceCount: 1
+  tagBaseName: ec2-lab-dev

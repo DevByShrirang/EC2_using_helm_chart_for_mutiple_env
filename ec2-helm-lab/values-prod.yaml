@@ -1,0 +1,4 @@
+environment: stage
+aws:
+  instanceCount: 2
+  tagBaseName: ec2-lab-stage

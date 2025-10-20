@@ -1,0 +1,4 @@
+environment: prod
+aws:
+  instanceCount: 3
+  tagBaseName: ec2-lab-prod

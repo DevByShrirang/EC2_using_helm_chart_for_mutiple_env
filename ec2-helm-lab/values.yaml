@@ -1,0 +1,7 @@
+aws:
+  region: us-east-2
+  keyName: jenkins
+  amiId: ami-077b630ef539aa0b5   # Ubuntu 22.04 (for example)
+  instanceType: t3.micro
+  securityGroupName: terraform-20251020023708191800000002
+  tagBaseName: ec2-lab

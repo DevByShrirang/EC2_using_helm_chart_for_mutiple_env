@@ -1,0 +1,18 @@
+{{- range $i, $e := until (.Values.aws.instanceCount | int) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ec2-instance-{{ $.Values.environment }}-{{ $i }}
+data:
+  create-ec2.sh: |
+    #!/bin/bash
+    echo "🚀 Launching EC2 instance for {{ $.Values.environment }} environment - instance #{{ $i }}"
+    aws ec2 run-instances \
+      --region {{ $.Values.aws.region }} \
+      --image-id {{ $.Values.aws.amiId }} \
+      --instance-type {{ $.Values.aws.instanceType }} \
+      --key-name {{ $.Values.aws.keyName }} \
+      --security-groups {{ $.Values.aws.securityGroupName }} \
+      --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value={{ $.Values.aws.tagBaseName }}-{{ $i }}},{Key=Environment,Value={{ $.Values.environment }}}]"
+---
+{{- end }}
