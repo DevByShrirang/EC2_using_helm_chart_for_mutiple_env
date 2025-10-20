@@ -141,4 +141,7 @@ pipeline {
       echo "🎯 All environments promoted successfully and EC2s created where applicable!"
     }
     failure {
-      echo "❌ Promotion failed. Please check the previous stage logs for detail
+      echo "❌ Promotion failed. Please check the previous stage logs for details."
+    }
+  }
+}
