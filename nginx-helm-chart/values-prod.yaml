@@ -1,0 +1,21 @@
+replicaCount: 3
+
+image:
+  tag: "1.25.3"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  host: "prod.example.com"
+
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 600m
+    memory: 1Gi
